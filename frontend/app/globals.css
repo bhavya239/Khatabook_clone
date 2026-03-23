@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+:root {
+  --color-given: #ef4444;      /* red-500 */
+  --color-received: #22c55e;   /* green-500 */
+  --color-brand: #6366f1;      /* indigo-500 */
+  --color-brand-dark: #4f46e5;
+}
+
+* { box-sizing: border-box; }
+
+/* Glassmorphism card */
+.glass {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+}
+
+/* Gradient button */
+.btn-primary {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  padding: 0.625rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  transition: opacity 0.2s, transform 0.15s;
+}
+.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
+
+/* Amount badge */
+.badge-given  { color: var(--color-given); }
+.badge-received { color: var(--color-received); }
+
+/* Subtle scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 999px; }

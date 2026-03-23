@@ -1,0 +1,122 @@
+'use client';
+import { useState, useEffect, useCallback } from 'react';
+import { transactionAPI } from '@/lib/api';
+import { Transaction } from '@/lib/types';
+import NewTransactionModal from '@/components/NewTransactionModal';
+
+const fmt = (n: number) => `₹${Math.abs(n).toLocaleString('en-IN')}`;
+
+export default function TransactionsPage() {
+  const [txs, setTxs] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setModalOpen] = useState(false);
+
+  // Filters
+  const [typeFilter, setTypeFilter] = useState<'all' | 'given' | 'received'>('all');
+
+  const load = useCallback(async () => {
+    try {
+      const p: any = { limit: 50 };
+      if (typeFilter !== 'all') p.type = typeFilter;
+      const res = await transactionAPI.getAll(p);
+      setTxs(res.data.transactions);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }, [typeFilter]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Delete transaction? This will reverse the contact balance.')) return;
+    try {
+      await transactionAPI.delete(id);
+      load();
+    } catch (e) {
+      alert('Failed to delete transaction');
+    }
+  };
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Transactions</h1>
+          <p className="text-gray-400 text-sm">Ledger entry history</p>
+        </div>
+        <button onClick={() => setModalOpen(true)} className="btn-primary px-3 sm:px-6">
+          + Entry
+        </button>
+      </div>
+
+      {/* Filters */}
+      <div className="flex gap-2 mb-6">
+        {(['all', 'given', 'received'] as const).map(f => (
+          <button
+            key={f}
+            onClick={() => setTypeFilter(f)}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              typeFilter === f
+                ? 'bg-indigo-600 text-white'
+                : 'bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700'
+            }`}
+          >
+            {f.charAt(0).toUpperCase() + f.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      <div className="glass overflow-hidden">
+        {loading ? (
+          <div className="p-8 text-center text-gray-500">Loading…</div>
+        ) : txs.length === 0 ? (
+          <div className="p-8 text-center text-gray-500">No transactions found.</div>
+        ) : (
+          <div className="divide-y divide-gray-800">
+            {txs.map(tx => (
+              <div key={tx._id} className="p-4 flex items-center justify-between hover:bg-white/5 transition-colors group">
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm ${
+                    tx.type === 'given' ? 'bg-red-500/10' : 'bg-green-500/10'
+                  }`}>
+                    {tx.type === 'given' ? '📤' : '📥'}
+                  </div>
+                  <div>
+                    <h3 className="text-white font-medium">{tx.contact?.name || 'Deleted Contact'}</h3>
+                    <p className="text-gray-500 text-xs mt-0.5">
+                      {new Date(tx.date).toLocaleDateString('en-IN', {
+                        day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                      })}
+                      {tx.category && <span className="ml-2 px-1.5 py-0.5 rounded bg-gray-800 text-gray-400">{tx.category}</span>}
+                    </p>
+                    {tx.description && <p className="text-gray-400 text-sm mt-1">{tx.description}</p>}
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-4 text-right">
+                  <div>
+                    <span className={`font-bold block ${tx.type === 'given' ? 'text-red-400' : 'text-green-400'}`}>
+                      {tx.type === 'given' ? '-' : '+'}{fmt(tx.amount)}
+                    </span>
+                    <span className="text-gray-600 text-xs">Bal: {fmt(tx.balanceAfter)}</span>
+                  </div>
+                  <button
+                    onClick={() => handleDelete(tx._id)}
+                    className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 p-2 transition-opacity"
+                    title="Reverse Contact Balance & Delete"
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {isModalOpen && <NewTransactionModal onClose={() => setModalOpen(false)} onSaved={load} />}
+    </div>
+  );
+}
