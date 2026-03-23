@@ -19,9 +19,16 @@ const app = express();
 // Helmet sets secure HTTP headers
 app.use(helmet());
 
-// Allow requests from the frontend client
+// Allow requests from the frontend client securely
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  origin: function (origin, callback) {
+    // Allow local development and Vercel deployments
+    if (!origin || origin.startsWith('http://localhost') || origin.includes('vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 
