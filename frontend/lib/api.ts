@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://khatabook-backend-dhk6.onrender.com/api',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://backend-two-rust-69.vercel.app/api',
   headers: { 'Content-Type': 'application/json' },
 });
 
