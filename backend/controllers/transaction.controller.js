@@ -78,15 +78,26 @@ const addTransaction = async (req, res) => {
 // ──────────────────────────────────────────────
 const getTransactions = async (req, res) => {
   try {
-    const { contact, startDate, endDate, type, page = 1, limit = 20 } = req.query;
+    const { contact, startDate, endDate, type, page = 1, limit = 20, month, year } = req.query;
 
     const filter = { user: req.user._id };
     if (contact) filter.contact = contact;
     if (type) filter.type = type;
-    if (startDate || endDate) {
+
+    let finalStartDate = startDate ? new Date(startDate) : undefined;
+    let finalEndDate = endDate ? new Date(endDate) : undefined;
+
+    if (month && year && !startDate && !endDate) {
+      const targetMonth = Number(month) - 1;
+      const targetYear = Number(year);
+      finalStartDate = new Date(targetYear, targetMonth, 1);
+      finalEndDate = new Date(targetYear, targetMonth + 1, 0, 23, 59, 59);
+    }
+
+    if (finalStartDate || finalEndDate) {
       filter.date = {};
-      if (startDate) filter.date.$gte = new Date(startDate);
-      if (endDate) filter.date.$lte = new Date(endDate);
+      if (finalStartDate) filter.date.$gte = finalStartDate;
+      if (finalEndDate) filter.date.$lte = finalEndDate;
     }
 
     const total = await Transaction.countDocuments(filter);

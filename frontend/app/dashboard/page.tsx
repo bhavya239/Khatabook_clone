@@ -14,11 +14,15 @@ export default function DashboardPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async () => {
+  const [month, setMonth] = useState(new Date().getMonth() + 1);
+  const [year, setYear] = useState(new Date().getFullYear());
+
+  const load = useCallback(async (isInitial = false) => {
     try {
+      if (isInitial) setLoading(true);
       const [s, t, c] = await Promise.all([
-        transactionAPI.getSummary(),
-        transactionAPI.getAll({ limit: 5 }),
+        transactionAPI.getSummary({ month, year }),
+        transactionAPI.getAll({ limit: 5, month, year }),
         contactAPI.getAll(),
       ]);
       setSummary(s.data);
@@ -29,9 +33,9 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [month, year]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load(true); }, [load]);
 
   if (loading) return <div className="flex items-center justify-center h-64 text-gray-400">Loading…</div>;
 
@@ -39,11 +43,36 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-        <p className="text-gray-400 text-sm">
-          {new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+          <p className="text-gray-400 text-sm">Overview of your finances</p>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <select 
+            value={month} 
+            onChange={(e) => setMonth(Number(e.target.value))}
+            className="bg-[#1e1e2e] border border-gray-700 text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2 outline-none"
+          >
+            {Array.from({ length: 12 }).map((_, i) => (
+              <option key={i + 1} value={i + 1}>
+                {new Date(2000, i, 1).toLocaleString('default', { month: 'long' })}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={year}
+            onChange={(e) => setYear(Number(e.target.value))}
+            className="bg-[#1e1e2e] border border-gray-700 text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2 outline-none"
+          >
+            {[...Array(5)].map((_, i) => {
+              const y = new Date().getFullYear() - 2 + i;
+              return <option key={y} value={y}>{y}</option>;
+            })}
+          </select>
+        </div>
       </div>
 
       {/* Summary Cards */}

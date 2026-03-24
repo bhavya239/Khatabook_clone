@@ -64,6 +64,8 @@ export const transactionAPI = {
     type?: 'given' | 'received';
     startDate?: string;
     endDate?: string;
+    month?: number;
+    year?: number;
     page?: number;
     limit?: number;
   }) => api.get('/transactions', { params }),
