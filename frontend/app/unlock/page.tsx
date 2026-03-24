@@ -19,7 +19,7 @@ export default function UnlockPage() {
     const next = pin + d;
     setPin(next);
     setError('');
-    if (next.length >= 4) handleSubmit(next);
+    if (next.length === 6) handleSubmit(next);
   };
 
   const handleSubmit = async (p: string) => {
@@ -44,7 +44,7 @@ export default function UnlockPage() {
       <div className="text-center">
         <div className="text-5xl mb-3">🔐</div>
         <h1 className="text-2xl font-bold text-white">Enter PIN</h1>
-        <p className="text-gray-400 text-sm mt-1">Enter your 4–6 digit PIN to unlock</p>
+        <p className="text-gray-400 text-sm mt-1">Enter your 6-digit PIN to unlock</p>
       </div>
 
       {/* PIN dots */}

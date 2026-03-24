@@ -25,10 +25,28 @@ const contactSchema = new mongoose.Schema(
       trim: true,
       maxlength: [200, 'Notes cannot exceed 200 characters'],
     },
-    // Running balance: positive = they owe you, negative = you owe them
     balance: {
       type: Number,
       default: 0,
+    },
+    score: {
+      type: Number,
+      default: 100, // Starts at perfect 100%
+    },
+    totalTransactions: {
+      type: Number,
+      default: 0,
+    },
+    onTimePayments: {
+      type: Number,
+      default: 0,
+    },
+    latePayments: {
+      type: Number,
+      default: 0,
+    },
+    lastPaymentDate: {
+      type: Date,
     },
     avatar: {
       type: String,

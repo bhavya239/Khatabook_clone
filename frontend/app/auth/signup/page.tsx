@@ -11,10 +11,28 @@ export default function SignupPage() {
   const { signup } = useAuth();
   const router = useRouter();
 
+  const handlePinChange = (index: number, val: string) => {
+    if (!/^\d*$/.test(val)) return;
+    const pinArr = form.pin.split('');
+    while (pinArr.length < 6) pinArr.push('');
+    pinArr[index] = val.slice(-1);
+    setForm({ ...form, pin: pinArr.join('') });
+    
+    if (val && index < 5) {
+      document.getElementById(`pin-${index + 1}`)?.focus();
+    }
+  };
+
+  const handlePinKey = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !form.pin[index] && index > 0) {
+      document.getElementById(`pin-${index - 1}`)?.focus();
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (form.pin && !/^\d{4,6}$/.test(form.pin)) {
-      setError('PIN must be 4–6 digits');
+    if (form.pin && !/^\d{6}$/.test(form.pin)) {
+      setError('PIN must be exactly 6 digits');
       return;
     }
     setLoading(true);
@@ -64,18 +82,24 @@ export default function SignupPage() {
           {field('phone', 'Phone Number', 'tel', '+91XXXXXXXXXX')}
           {field('password', 'Password', 'password', '••••••••')}
           <div>
-            <label className="text-sm text-gray-400 mb-1 block">
-              Unlock PIN <span className="text-gray-600">(optional, 4–6 digits)</span>
+            <label className="text-sm text-gray-400 mb-2 block">
+              Unlock PIN <span className="text-gray-600">(optional, 6 digits)</span>
             </label>
-            <input
-              type="password"
-              inputMode="numeric"
-              placeholder="1234"
-              maxLength={6}
-              value={form.pin}
-              onChange={(e) => setForm({ ...form, pin: e.target.value })}
-              className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500 transition-colors"
-            />
+            <div className="flex gap-2 justify-between">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <input
+                  key={i}
+                  id={`pin-${i}`}
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={form.pin[i] || ''}
+                  onChange={(e) => handlePinChange(i, e.target.value)}
+                  onKeyDown={(e) => handlePinKey(i, e)}
+                  className="w-12 h-14 bg-gray-900 border border-gray-700 rounded-xl text-center text-xl text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                />
+              ))}
+            </div>
           </div>
           <button type="submit" disabled={loading} className="btn-primary w-full text-center disabled:opacity-50">
             {loading ? 'Creating account…' : 'Create Account'}

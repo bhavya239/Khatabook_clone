@@ -8,6 +8,7 @@ const {
   deleteTransaction,
   getSummary,
   sendReminder,
+  getOverdueTransactions,
 } = require('../controllers/transaction.controller');
 const { protect } = require('../middleware/auth.middleware');
 const { transactionValidator } = require('../middleware/validate.middleware');
@@ -17,6 +18,7 @@ router.use(protect);
 
 // Summary and reminder (specific paths before /:id)
 router.get('/summary', getSummary);
+router.get('/overdue', getOverdueTransactions);
 router.post('/remind/:contactId', sendReminder);
 
 router.route('/')

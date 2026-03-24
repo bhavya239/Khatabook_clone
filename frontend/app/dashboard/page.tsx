@@ -123,13 +123,15 @@ export default function DashboardPage() {
                       <p className="text-gray-500 text-xs">
                         {new Date(tx.date).toLocaleDateString('en-IN')}
                         {tx.description ? ` · ${tx.description}` : ''}
+                        {tx.isOverdue && <span className="ml-2 px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-400 font-bold uppercase tracking-wider text-[10px]">Overdue</span>}
                       </p>
                     </div>
                   </div>
-                  <span className={`font-semibold text-sm ${
+                  <span className={`font-semibold text-sm flex flex-col items-end ${
                     tx.type === 'given' ? 'text-red-400' : 'text-green-400'
                   }`}>
-                    {tx.type === 'given' ? '-' : '+'}{fmt(tx.amount)}
+                    <span>{tx.type === 'given' ? '-' : '+'}{fmt(tx.amount)}</span>
+                    {tx.penaltyApplied ? <span className="text-[10px] text-rose-500">+ {fmt(tx.penaltyApplied)} fee</span> : null}
                   </span>
                 </li>
               ))}

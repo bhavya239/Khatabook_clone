@@ -47,6 +47,7 @@ export const authAPI = {
 // ──────────────────────────────────────────────
 export const contactAPI = {
   getAll: () => api.get('/contacts'),
+  getScores: () => api.get('/contacts/score'),
   getOne: (id: string) => api.get(`/contacts/${id}`),
   create: (data: { name: string; phone: string; notes?: string }) =>
     api.post('/contacts', data),
@@ -77,14 +78,28 @@ export const transactionAPI = {
     description?: string;
     date?: string;
     category?: string;
+    dueDate?: string;
   }) => api.post('/transactions', data),
   update: (id: string, data: { description?: string; category?: string }) =>
     api.put(`/transactions/${id}`, data),
   delete: (id: string) => api.delete(`/transactions/${id}`),
   getSummary: (params?: { month?: number; year?: number }) =>
     api.get('/transactions/summary', { params }),
+  getOverdue: () => api.get('/transactions/overdue'),
   sendReminder: (contactId: string) =>
     api.post(`/transactions/remind/${contactId}`),
+};
+
+// ──────────────────────────────────────────────
+// Admin
+// ──────────────────────────────────────────────
+export const reportAPI = {
+  getProfitLoss: (mode?: 'personal' | 'business') => 
+    api.get(mode ? `/reports/profit-loss?mode=${mode}` : '/reports/profit-loss'),
+};
+
+export const adminAPI = {
+  getStats: () => api.get('/admin/stats'),
 };
 
 export default api;

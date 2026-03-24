@@ -22,15 +22,17 @@ const getTwilioClient = () => {
 // ──────────────────────────────────────────────
 // Message Templates
 // ──────────────────────────────────────────────
-const buildMessage = ({ toName, type, amount, balance }) => {
+const buildMessage = ({ toName, type, amount, balance, contactId }) => {
   const fmt = (n) => `₹${Math.abs(n).toLocaleString('en-IN')}`;
+  const appLink = `https://khatabookclone.vercel.app/pay?contactId=${contactId || '123'}`;
+
   switch (type) {
     case 'given':
-      return `Hi ${toName}, I gave you ${fmt(amount)}. Total due from you: ${fmt(balance)} 🙏`;
+      return `Hi ${toName}, I gave you ${fmt(amount)}. Total due from you: ${fmt(balance)} 🙏\n\nConfirm payment: ${appLink}`;
     case 'received':
-      return `Hi ${toName}, I received ${fmt(amount)} from you. Remaining balance: ${fmt(Math.abs(balance))} ✅`;
+      return `Hi ${toName}, I received ${fmt(amount)} from you. Remaining balance: ${fmt(Math.abs(balance))} ✅\n\nView ledger: ${appLink}`;
     case 'reminder':
-      return `⏰ Reminder: Hi ${toName}, you still owe me ${fmt(balance)}. Please arrange the payment. Thank you!`;
+      return `⏰ Reminder: Hi ${toName}, you still owe me ${fmt(balance)}. Please arrange the payment.\n\nPay securely here: ${appLink}`;
     default:
       return `Hi ${toName}, transaction of ${fmt(amount)} has been recorded.`;
   }
@@ -51,15 +53,16 @@ const buildWhatsAppLink = (phone, message) => {
 // ──────────────────────────────────────────────
 /**
  * @param {object} params
- * @param {string} params.toPhone - Contact's phone number (e.g. +919876543210)
+ * @param {string} params.toPhone - Contact's phone number
  * @param {string} params.toName  - Contact's display name
  * @param {string} params.type    - 'given' | 'received' | 'reminder'
  * @param {number} params.amount  - Transaction amount
  * @param {number} params.balance - Contact's current balance
+ * @param {string} params.contactId - DB ID for active linking
  * @returns {{ success: boolean, sid?: string, fallbackLink: string }}
  */
-const sendWhatsAppMessage = async ({ toPhone, toName, type, amount, balance }) => {
-  const message = buildMessage({ toName, type, amount, balance });
+const sendWhatsAppMessage = async ({ toPhone, toName, type, amount, balance, contactId }) => {
+  const message = buildMessage({ toName, type, amount, balance, contactId });
   const fallbackLink = buildWhatsAppLink(toPhone, message);
 
   try {

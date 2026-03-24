@@ -9,6 +9,7 @@ require('dotenv').config();
 const authRoutes = require('./routes/auth.routes');
 const contactRoutes = require('./routes/contact.routes');
 const transactionRoutes = require('./routes/transaction.routes');
+const adminRoutes = require('./routes/admin.routes');
 
 const app = express();
 
@@ -55,6 +56,8 @@ if (process.env.NODE_ENV !== 'test') {
 app.use('/api/auth', authRoutes);
 app.use('/api/contacts', contactRoutes);
 app.use('/api/transactions', transactionRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/reports', require('./routes/report.routes'));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

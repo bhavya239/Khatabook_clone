@@ -103,4 +103,20 @@ const deleteContact = async (req, res) => {
   }
 };
 
-module.exports = { getContacts, addContact, getContact, updateContact, deleteContact };
+// ──────────────────────────────────────────────
+// @route   GET /api/contacts/score
+// @desc    Get contacts explicitly for credit scoring UI
+// @access  Private
+// ──────────────────────────────────────────────
+const getContactScores = async (req, res) => {
+  try {
+    const contacts = await Contact.find({ user: req.user._id, isActive: true })
+      .select('name phone score totalTransactions onTimePayments latePayments lastPaymentDate balance')
+      .sort({ score: -1, onTimePayments: -1 });
+    res.json({ success: true, count: contacts.length, contacts });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+module.exports = { getContacts, addContact, getContact, updateContact, deleteContact, getContactScores };

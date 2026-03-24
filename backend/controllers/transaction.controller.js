@@ -9,7 +9,7 @@ const { sendWhatsAppMessage } = require('../services/whatsapp.service');
 // ──────────────────────────────────────────────
 const addTransaction = async (req, res) => {
   try {
-    const { contact: contactId, type, amount, description, date, category } = req.body;
+    const { contact: contactId, type, amount, description, date, category, dueDate } = req.body;
 
     // Verify contact belongs to this user
     const contact = await Contact.findOne({ _id: contactId, user: req.user._id });
@@ -23,8 +23,23 @@ const addTransaction = async (req, res) => {
     //  received → you received   → balance decreases (you owe them less / they owe you less)
     // ──────────────────────────────────────────────
     const balanceDelta = type === 'given' ? +amount : -amount;
-    contact.balance = contact.balance + balanceDelta;
-    await contact.save();
+    const updatedContact = await Contact.findOneAndUpdate(
+      { _id: contactId, user: req.user._id },
+      { $inc: { balance: balanceDelta } },
+      { new: true }
+    );
+
+    if (!updatedContact) {
+      return res.status(404).json({ success: false, message: 'Contact not found during calculation' });
+    }
+
+    if (type === 'received') {
+      updatedContact.onTimePayments += 1;
+      updatedContact.totalTransactions = updatedContact.onTimePayments + updatedContact.latePayments;
+      updatedContact.score = Math.round((updatedContact.onTimePayments / updatedContact.totalTransactions) * 100);
+      updatedContact.lastPaymentDate = new Date();
+      await updatedContact.save();
+    }
 
     // Create transaction with balance snapshot
     const transaction = await Transaction.create({
@@ -35,7 +50,8 @@ const addTransaction = async (req, res) => {
       description,
       date: date || Date.now(),
       category,
-      balanceAfter: contact.balance,
+      balanceAfter: updatedContact.balance,
+      dueDate: type === 'given' && dueDate ? new Date(dueDate) : undefined,
     });
 
     // ──────────────────────────────────────────────
@@ -45,9 +61,10 @@ const addTransaction = async (req, res) => {
       const msgResult = await sendWhatsAppMessage({
         toPhone: contact.phone,
         toName: contact.name,
+        contactId: contact._id,
         type,
         amount,
-        balance: contact.balance,
+        balance: updatedContact.balance,
       });
       if (msgResult.success) {
         transaction.whatsappSent = true;
@@ -63,7 +80,7 @@ const addTransaction = async (req, res) => {
       success: true,
       message: 'Transaction added',
       transaction: await transaction.populate('contact', 'name phone'),
-      newBalance: contact.balance,
+      newBalance: updatedContact.balance,
     });
   } catch (error) {
     console.error('Add transaction error:', error.message);
@@ -180,12 +197,11 @@ const deleteTransaction = async (req, res) => {
     }
 
     // Reverse the balance delta
-    const contact = await Contact.findById(transaction.contact);
-    if (contact) {
-      const reverseDelta = transaction.type === 'given' ? -transaction.amount : +transaction.amount;
-      contact.balance += reverseDelta;
-      await contact.save();
-    }
+    const reverseDelta = transaction.type === 'given' ? -transaction.amount : +transaction.amount;
+    await Contact.findOneAndUpdate(
+      { _id: transaction.contact, user: req.user._id },
+      { $inc: { balance: reverseDelta } }
+    );
 
     await transaction.deleteOne();
 
@@ -269,12 +285,31 @@ const sendReminder = async (req, res) => {
     const result = await sendWhatsAppMessage({
       toPhone: contact.phone,
       toName: contact.name,
+      contactId: contact._id,
       type: 'reminder',
       amount: 0,
       balance: contact.balance,
     });
 
     res.json({ success: true, message: 'Reminder sent', whatsappLink: result.fallbackLink });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// ──────────────────────────────────────────────
+// @route   GET /api/transactions/overdue
+// @desc    Get all overdue transactions with penalties
+// @access  Private
+// ──────────────────────────────────────────────
+const getOverdueTransactions = async (req, res) => {
+  try {
+    const transactions = await Transaction.find({
+      user: req.user._id,
+      isOverdue: true
+    }).populate('contact', 'name phone').sort({ date: -1 });
+    
+    res.json({ success: true, transactions });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error' });
   }
@@ -288,4 +323,5 @@ module.exports = {
   deleteTransaction,
   getSummary,
   sendReminder,
+  getOverdueTransactions,
 };

@@ -59,6 +59,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </Link>
             );
           })}
+          
+          {user?.role === 'admin' && (
+            <Link
+              href="/dashboard/admin"
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all mt-4 ${
+                pathname.startsWith('/dashboard/admin')
+                  ? 'bg-rose-600/20 text-rose-400 border border-rose-600/30'
+                  : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+              }`}
+            >
+              <span className="text-lg">👑</span>
+              Admin Portal
+            </Link>
+          )}
         </nav>
 
         {/* User + Logout */}

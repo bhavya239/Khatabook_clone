@@ -13,7 +13,8 @@ export default function NewTransactionModal({
     amount: '',
     description: '',
     category: 'other',
-    date: new Date().toISOString().slice(0, 16)
+    date: new Date().toISOString().slice(0, 16),
+    dueDate: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -33,7 +34,8 @@ export default function NewTransactionModal({
       await transactionAPI.create({
         ...form,
         amount: Number(form.amount),
-        date: new Date(form.date).toISOString()
+        date: new Date(form.date).toISOString(),
+        dueDate: form.type === 'given' && form.dueDate ? new Date(form.dueDate).toISOString() : undefined,
       });
       onSaved();
       onClose();
@@ -120,6 +122,18 @@ export default function NewTransactionModal({
               </select>
             </div>
           </div>
+
+          {form.type === 'given' && (
+            <div>
+              <label className="text-sm text-rose-400 mb-1 block font-medium">Due Date (Optional)</label>
+              <input
+                type="date" value={form.dueDate}
+                onChange={e => setForm({ ...form, dueDate: e.target.value })}
+                className="w-full bg-gray-900 border border-rose-500/50 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-rose-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">A 2% penalty is applied daily after this date.</p>
+            </div>
+          )}
 
           <div>
             <label className="text-sm text-gray-400 mb-1 block">Description (optional)</label>

@@ -1,128 +1,154 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { transactionAPI } from '@/lib/api';
-import { SummaryResponse } from '@/lib/types';
-import { 
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell 
-} from 'recharts';
+import { useState, useEffect, useCallback } from 'react';
+import { reportAPI } from '@/lib/api';
+import { ProfitLossResponse } from '@/lib/types';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const fmt = (n: number) => `₹${Math.abs(n).toLocaleString('en-IN')}`;
 
+const COLORS = ['#6366f1', '#10b981', '#f43f5e', '#f59e0b', '#8b5cf6', '#ec4899'];
+
 export default function ReportsPage() {
-  const [data, setData] = useState<SummaryResponse | null>(null);
+  const [data, setData] = useState<ProfitLossResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [month, setMonth] = useState(() => new Date().getMonth() + 1);
-  const [year, setYear]   = useState(() => new Date().getFullYear());
+  const [mode, setMode] = useState<'all' | 'personal' | 'business'>('all');
 
-  useEffect(() => {
-    setLoading(true);
-    transactionAPI.getSummary({ month, year })
-      .then(res => setData(res.data))
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, [month, year]);
+  const load = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await reportAPI.getProfitLoss(mode !== 'all' ? mode : undefined);
+      setData(res.data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }, [mode]);
 
-  const s = data?.summary;
-  
-  // Chart Data
-  const chartData = [
-    { name: 'Given (Owed to you)', amount: s?.totalGiven || 0, color: '#f87171' }, // red-400
-    { name: 'Received (You owe / paid)', amount: s?.totalReceived || 0, color: '#4ade80' } // green-400
-  ];
+  useEffect(() => { load(); }, [load]);
+
+  if (loading) return <div className="text-gray-400 p-6 flex justify-center">Loading P&L Data...</div>;
+  if (!data) return <div className="text-red-400 p-6">Failed to load reports.</div>;
+
+  const isProfit = data.profit >= 0;
 
   return (
-    <div>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <div className="space-y-6 max-w-7xl mx-auto">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Monthly Report</h1>
-          <p className="text-gray-400 text-sm">Visual overview of your cash flow</p>
+          <h1 className="text-2xl font-bold text-white">Profit & Loss Dashboard</h1>
+          <p className="text-gray-400 text-sm">Financial analytics and category breakdown</p>
         </div>
         
-        {/* Month Picker */}
-        <div className="flex items-center gap-2 bg-gray-900 border border-gray-800 rounded-lg p-1 w-max">
-          <select 
-            value={month} onChange={(e) => setMonth(Number(e.target.value))}
-            className="bg-transparent text-white px-2 py-1 text-sm focus:outline-none"
-          >
-            {Array.from({length: 12}).map((_, i) => (
-              <option key={i+1} value={i+1} className="bg-gray-900">
-                {new Date(0, i).toLocaleString('en', { month: 'long' })}
-              </option>
-            ))}
-          </select>
-          <span className="text-gray-600">|</span>
-          <select 
-            value={year} onChange={(e) => setYear(Number(e.target.value))}
-            className="bg-transparent text-white px-2 py-1 text-sm focus:outline-none"
-          >
-            {[year-1, year, year+1].map(y => (
-              <option key={y} value={y} className="bg-gray-900">{y}</option>
-            ))}
-          </select>
+        {/* Business Dashboard mode toggle */}
+        <div className="flex bg-gray-900 rounded-lg p-1 border border-gray-800">
+          {(['all', 'personal', 'business'] as const).map(m => (
+            <button
+              key={m}
+              onClick={() => setMode(m)}
+              className={`px-6 py-1.5 rounded-md text-sm font-medium capitalize transition-all duration-300 ${
+                mode === m 
+                  ? 'bg-indigo-600 text-white shadow-lg' 
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              {m}
+            </button>
+          ))}
         </div>
       </div>
 
-      {loading ? (
-        <div className="p-12 text-center text-gray-500 glass">Generating report…</div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          
-          {/* Chart Section */}
-          <div className="glass p-6">
-            <h2 className="text-lg font-semibold text-white mb-6">Cash Flow</h2>
-            <div className="w-full h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
-                  <XAxis dataKey="name" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `₹${v}`} />
-                  <Tooltip 
-                    cursor={{fill: '#1f2937'}} 
-                    contentStyle={{ backgroundColor: '#111827', border: '1px solid #374151', borderRadius: '8px', color: '#fff' }}
-                    formatter={(val: any) => [fmt(Number(val)), 'Amount']}
-                  />
-                  <Bar dataKey="amount" radius={[4, 4, 0, 0]}>
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            
-            <div className="mt-8 flex items-center justify-between border-t border-gray-800 pt-4">
-              <span className="text-gray-400">Net Flow:</span>
-              <span className={`text-xl font-bold ${(s?.netBalance || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {(s?.netBalance || 0) >= 0 ? '+' : '-'}{fmt(s?.netBalance || 0)}
-              </span>
-            </div>
-          </div>
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="glass p-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full -mr-10 -mt-10 blur-2xl"></div>
+          <p className="text-gray-400 text-xs font-medium uppercase tracking-wider mb-2 relative z-10">Total Income (Received)</p>
+          <p className="text-3xl font-bold text-green-400 relative z-10">+{fmt(data.totalIncome)}</p>
+        </div>
+        <div className="glass p-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full -mr-10 -mt-10 blur-2xl"></div>
+          <p className="text-gray-400 text-xs font-medium uppercase tracking-wider mb-2 relative z-10">Total Expense (Given)</p>
+          <p className="text-3xl font-bold text-rose-400 relative z-10">-{fmt(data.totalExpense)}</p>
+        </div>
+        <div className={`glass p-6 border relative overflow-hidden ${isProfit ? 'border-green-500/30' : 'border-rose-500/30'}`}>
+          <div className={`absolute top-0 right-0 w-32 h-32 rounded-full -mr-10 -mt-10 blur-2xl ${isProfit ? 'bg-green-500/10' : 'bg-rose-500/10'}`}></div>
+          <p className="text-gray-400 text-xs font-medium uppercase tracking-wider mb-2 relative z-10">Net Profit/Loss</p>
+          <p className={`text-4xl font-bold relative z-10 ${isProfit ? 'text-green-400' : 'text-rose-400'}`}>
+            {isProfit ? '+' : '-'}{fmt(data.profit)}
+          </p>
+        </div>
+      </div>
 
-          {/* Contact Balances Section */}
-          <div className="glass p-6">
-            <h2 className="text-lg font-semibold text-white mb-6">Pending Balances</h2>
-            <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
-              {data?.contactBalances.length === 0 ? (
-                <p className="text-gray-500 text-sm text-center">No active balances this month.</p>
-              ) : (
-                data?.contactBalances.map(c => (
-                  <div key={c._id} className="flex items-center justify-between p-3 bg-gray-900/50 rounded-lg">
-                    <p className="text-white font-medium">{c.name}</p>
-                    <div className="text-right">
-                      <p className={`font-bold ${c.balance >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {c.balance >= 0 ? '+' : '-'}{fmt(c.balance)}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {c.balance >= 0 ? 'They owe you' : 'You owe them'}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Trend Line Chart */}
+        <div className="glass p-6">
+          <h2 className="text-lg font-semibold text-white mb-6">Monthly Revenue Trend</h2>
+          <div className="h-[300px] w-full">
+            {data.monthlyBreakdown.length === 0 ? (
+               <div className="h-full flex items-center justify-center text-gray-500 text-sm">No historical data available.</div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={data.monthlyBreakdown} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+                  <XAxis dataKey="month" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `₹${val/1000}k`} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#111827', borderColor: '#374151', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)' }}
+                    itemStyle={{ color: '#e5e7eb', fontSize: '14px', fontWeight: 500 }}
+                  />
+                  <Line type="monotone" dataKey="profit" name="Net Profit" stroke={isProfit ? '#34d399' : '#fb7185'} strokeWidth={4} dot={{ r: 4, fill: '#111827', strokeWidth: 2 }} activeDot={{ r: 8, strokeWidth: 0 }} />
+                  <Line type="monotone" dataKey="income" name="Income" stroke="#818cf8" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+                  <Line type="monotone" dataKey="expense" name="Expense" stroke="#f87171" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
-      )}
+
+        {/* Category Pie Chart */}
+        <div className="glass p-6">
+          <h2 className="text-lg font-semibold text-white mb-6">Expense Categories</h2>
+          <div className="h-[300px] w-full flex flex-col items-center justify-center">
+             {data.categoryBreakdown.length === 0 ? (
+               <div className="text-gray-500 text-sm">No categorical breakdown found.</div>
+             ) : (
+               <>
+                <ResponsiveContainer width="100%" height="80%">
+                  <PieChart>
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: '#111827', borderColor: '#374151', borderRadius: '12px' }}
+                      formatter={(value: number) => [`${fmt(value)}`, 'Volume']}
+                    />
+                    <Pie
+                      data={data.categoryBreakdown}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={65}
+                      outerRadius={105}
+                      paddingAngle={4}
+                      dataKey="value"
+                      stroke="none"
+                    >
+                      {data.categoryBreakdown.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} className="hover:opacity-80 transition-opacity cursor-pointer" />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+                
+                <div className="flex flex-wrap gap-4 justify-center mt-4 w-full px-4">
+                  {data.categoryBreakdown.map((c, i) => (
+                    <div key={c.name} className="flex items-center gap-2 text-sm text-gray-300 bg-gray-900/50 px-3 py-1.5 rounded-full border border-gray-800">
+                      <span className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: COLORS[i % COLORS.length] }}></span>
+                      <span className="capitalize font-medium">{c.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+             )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -16,6 +16,11 @@ const signup = async (req, res) => {
       return res.status(409).json({ success: false, message: 'Phone number already registered' });
     }
 
+    // Strict 6-digit numeric validation for PIN
+    if (pin && !/^\d{6}$/.test(pin)) {
+      return res.status(400).json({ success: false, message: 'PIN must be exactly 6 numeric digits' });
+    }
+
     // Create user (password is hashed in pre-save hook)
     const user = await User.create({ name, phone, password, pin });
 
@@ -104,8 +109,8 @@ const getMe = async (req, res) => {
 const setPin = async (req, res) => {
   try {
     const { pin } = req.body;
-    if (!pin || !/^\d{4,6}$/.test(pin)) {
-      return res.status(400).json({ success: false, message: 'PIN must be 4-6 digits' });
+    if (!pin || !/^\d{6}$/.test(pin)) {
+      return res.status(400).json({ success: false, message: 'PIN must be exactly 6 digits' });
     }
 
     const user = await User.findById(req.user._id);

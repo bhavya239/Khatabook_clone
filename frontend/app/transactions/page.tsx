@@ -90,6 +90,8 @@ export default function TransactionsPage() {
                         day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
                       })}
                       {tx.category && <span className="ml-2 px-1.5 py-0.5 rounded bg-gray-800 text-gray-400">{tx.category}</span>}
+                      {tx.isOverdue && <span className="ml-2 px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-400 font-bold uppercase tracking-wider text-[10px] border border-rose-500/30">OVERDUE</span>}
+                      {tx.dueDate && !tx.isOverdue && <span className="ml-2 text-[10px] text-gray-500">Due: {new Date(tx.dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>}
                     </p>
                     {tx.description && <p className="text-gray-400 text-sm mt-1">{tx.description}</p>}
                   </div>
@@ -97,10 +99,13 @@ export default function TransactionsPage() {
                 
                 <div className="flex items-center gap-4 text-right">
                   <div>
-                    <span className={`font-bold block ${tx.type === 'given' ? 'text-red-400' : 'text-green-400'}`}>
+                    <span className={`font-bold block text-right ${tx.type === 'given' ? 'text-red-400' : 'text-green-400'}`}>
                       {tx.type === 'given' ? '-' : '+'}{fmt(tx.amount)}
+                      {tx.penaltyApplied ? (
+                        <span className="text-[10px] text-rose-500 block mt-0.5">+ {fmt(tx.penaltyApplied)} penalty</span>
+                      ) : null}
                     </span>
-                    <span className="text-gray-600 text-xs">Bal: {fmt(tx.balanceAfter)}</span>
+                    <span className="text-gray-600 text-xs block text-right mt-0.5">Bal: {fmt(tx.balanceAfter)}</span>
                   </div>
                   <button
                     onClick={() => handleDelete(tx._id)}

@@ -6,6 +6,12 @@ import NewContactModal from '@/components/NewContactModal';
 
 const fmt = (n: number) => `₹${Math.abs(n).toLocaleString('en-IN')}`;
 
+const getScoreBadge = (score: number) => {
+  if (score >= 80) return <span className="bg-green-500/20 text-green-400 px-2 py-0.5 rounded text-[10px] font-bold border border-green-500/30 uppercase tracking-wider">Excellent {score}</span>;
+  if (score >= 50) return <span className="bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded text-[10px] font-bold border border-amber-500/30 uppercase tracking-wider">Average {score}</span>;
+  return <span className="bg-rose-500/20 text-rose-400 px-2 py-0.5 rounded text-[10px] font-bold border border-rose-500/30 uppercase tracking-wider">Risky {score}</span>;
+};
+
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,7 +66,10 @@ export default function ContactsPage() {
                     {c.name[0].toUpperCase()}
                   </div>
                   <div>
-                    <h3 className="text-white font-semibold">{c.name}</h3>
+                    <h3 className="text-white font-semibold flex items-center gap-2">
+                      {c.name}
+                      {c.totalTransactions > 0 && getScoreBadge(c.score)}
+                    </h3>
                     <p className="text-gray-400 text-sm">{c.phone}</p>
                   </div>
                 </div>
