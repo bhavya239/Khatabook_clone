@@ -117,7 +117,7 @@ export default function ReportsPage() {
                   <PieChart>
                     <Tooltip 
                       contentStyle={{ backgroundColor: '#111827', borderColor: '#374151', borderRadius: '12px' }}
-                      formatter={(value: number) => [`${fmt(value)}`, 'Volume']}
+                      formatter={(value: any) => [`${fmt(Number(value) || 0)}`, 'Volume']}
                     />
                     <Pie
                       data={data.categoryBreakdown}
