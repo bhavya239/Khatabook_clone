@@ -38,6 +38,17 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    // Multi-user business mode
+    businessId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Business',
+      default: null,
+    },
+    businessRole: {
+      type: String,
+      enum: ['owner', 'staff'],
+      default: null,
+    },
   },
   { timestamps: true }
 );

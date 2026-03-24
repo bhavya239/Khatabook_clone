@@ -22,17 +22,24 @@ const getTwilioClient = () => {
 // ──────────────────────────────────────────────
 // Message Templates
 // ──────────────────────────────────────────────
-const buildMessage = ({ toName, type, amount, balance, contactId }) => {
+const buildMessage = ({ toName, type, amount, balance, contactId, score }) => {
   const fmt = (n) => `₹${Math.abs(n).toLocaleString('en-IN')}`;
   const appLink = `https://khatabookclone.vercel.app/pay?contactId=${contactId || '123'}`;
+  
+  // Credit score badge for Phase 5 integration
+  const scoreBadge = score !== undefined
+    ? score >= 80 ? '\nYour trust score: Excellent ⭐⭐⭐'
+    : score >= 50 ? '\nYour trust score: Average ⭐⭐'
+    : '\nYour trust score: Risky ⭐'
+    : '';
 
   switch (type) {
     case 'given':
-      return `Hi ${toName}, I gave you ${fmt(amount)}. Total due from you: ${fmt(balance)} 🙏\n\nConfirm payment: ${appLink}`;
+      return `Hi ${toName}, I gave you ${fmt(amount)}. Total due from you: ${fmt(balance)} 🙏${scoreBadge}\n\nConfirm payment: ${appLink}`;
     case 'received':
-      return `Hi ${toName}, I received ${fmt(amount)} from you. Remaining balance: ${fmt(Math.abs(balance))} ✅\n\nView ledger: ${appLink}`;
+      return `Hi ${toName}, I received ${fmt(amount)} from you. Remaining balance: ${fmt(Math.abs(balance))} ✅${scoreBadge}\n\nView ledger: ${appLink}`;
     case 'reminder':
-      return `⏰ Reminder: Hi ${toName}, you still owe me ${fmt(balance)}. Please arrange the payment.\n\nPay securely here: ${appLink}`;
+      return `⏰ Reminder: Hi ${toName}, you still owe me ${fmt(balance)}. Please arrange the payment.${scoreBadge}\n\nPay securely here: ${appLink}`;
     default:
       return `Hi ${toName}, transaction of ${fmt(amount)} has been recorded.`;
   }
