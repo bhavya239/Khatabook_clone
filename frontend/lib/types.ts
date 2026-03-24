@@ -8,6 +8,8 @@ export interface User {
   phone: string;
   avatar?: string;
   role?: 'user' | 'admin';
+  businessId?: string;
+  businessRole?: 'owner' | 'staff';
   createdAt: string;
 }
 
