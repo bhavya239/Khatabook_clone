@@ -9,11 +9,13 @@ import { useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 
 const NAV = [
-  { href: '/dashboard',          icon: '📊', label: 'Dashboard' },
-  { href: '/contacts',           icon: '👥', label: 'Contacts' },
-  { href: '/transactions',       icon: '💸', label: 'Transactions' },
-  { href: '/reports',            icon: '📈', label: 'Reports' },
-  { href: '/dashboard/business', icon: '🏢', label: 'Business' },
+  { href: '/dashboard',             icon: '📊', label: 'Dashboard' },
+  { href: '/contacts',              icon: '👥', label: 'Contacts' },
+  { href: '/transactions',          icon: '💸', label: 'Transactions' },
+  { href: '/reports',               icon: '📈', label: 'Reports' },
+  { href: '/dashboard/business',    icon: '🏢', label: 'Business' },
+  { href: '/dashboard/admin',       icon: '🔗', label: 'Admin' },
+  { href: '/dashboard/superadmin',  icon: '🛡️', label: 'Super Admin' },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
