@@ -32,7 +32,8 @@ export default function CalculatorPage() {
         if (isAuthenticated) {
           router.push('/unlock');
         } else {
-          router.push('/auth/signup');
+          // Must pass the universal PIN gate first
+          router.push('/gate?redirect=/auth/signup');
         }
         return;
       }

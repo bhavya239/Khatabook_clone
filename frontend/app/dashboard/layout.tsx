@@ -8,14 +8,13 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 
+// Base nav visible to all authenticated users
 const NAV = [
-  { href: '/dashboard',             icon: '📊', label: 'Dashboard' },
-  { href: '/contacts',              icon: '👥', label: 'Contacts' },
-  { href: '/transactions',          icon: '💸', label: 'Transactions' },
-  { href: '/reports',               icon: '📈', label: 'Reports' },
-  { href: '/dashboard/business',    icon: '🏢', label: 'Business' },
-  { href: '/dashboard/admin',       icon: '🔗', label: 'Admin' },
-  { href: '/dashboard/superadmin',  icon: '🛡️', label: 'Super Admin' },
+  { href: '/dashboard',          icon: '📊', label: 'Dashboard' },
+  { href: '/contacts',           icon: '👥', label: 'Contacts' },
+  { href: '/transactions',       icon: '💸', label: 'Transactions' },
+  { href: '/reports',            icon: '📈', label: 'Reports' },
+  { href: '/dashboard/business', icon: '🏢', label: 'Business' },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -63,17 +62,33 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             );
           })}
           
-          {user?.role === 'admin' && (
+          {/* Admin link — only for 'admin' role */}
+          {(user?.role === 'admin' || user?.role === 'superadmin') && (
             <Link
               href="/dashboard/admin"
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all mt-4 ${
-                pathname.startsWith('/dashboard/admin')
+                pathname === '/dashboard/admin'
                   ? 'bg-rose-600/20 text-rose-400 border border-rose-600/30'
                   : 'text-gray-400 hover:bg-gray-800 hover:text-white'
               }`}
             >
               <span className="text-lg">👑</span>
               Admin Portal
+            </Link>
+          )}
+
+          {/* Super Admin link — only for 'superadmin' role */}
+          {user?.role === 'superadmin' && (
+            <Link
+              href="/dashboard/superadmin"
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                pathname.startsWith('/dashboard/superadmin')
+                  ? 'bg-purple-600/20 text-purple-400 border border-purple-600/30'
+                  : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+              }`}
+            >
+              <span className="text-lg">🛡️</span>
+              Super Admin
             </Link>
           )}
         </nav>
