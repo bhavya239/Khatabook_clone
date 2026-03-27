@@ -55,8 +55,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         );
       })}
 
-      {/* Admin link — only for 'admin' or 'superadmin' role */}
-      {(user?.role === 'admin' || user?.role === 'superadmin') && (
+      {/* Admin link — only for 'admin' role */}
+      {user?.role === 'admin' && (
         <Link
           href="/dashboard/admin"
           className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all mt-4 ${
