@@ -9,6 +9,7 @@ interface AuthContextType extends AuthState {
   signup: (name: string, phone: string, password: string, pin?: string) => Promise<void>;
   logout: () => void;
   unlock: (pin: string) => Promise<boolean>;
+  refreshUser: () => Promise<void>;
   loading: boolean;
 }
 
@@ -67,8 +68,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Refresh user data (e.g. after creating a business)
+  const refreshUser = async () => {
+    try {
+      const { data } = await authAPI.getMe();
+      localStorage.setItem('kb_user', JSON.stringify(data.user));
+      setState((prev) => ({ ...prev, user: data.user }));
+    } catch {
+      // ignore
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ ...state, login, signup, logout, unlock, loading }}>
+    <AuthContext.Provider value={{ ...state, login, signup, logout, unlock, refreshUser, loading }}>
       {children}
     </AuthContext.Provider>
   );

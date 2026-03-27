@@ -2,10 +2,12 @@
 import { useState, useEffect } from 'react';
 import { transactionAPI, contactAPI } from '@/lib/api';
 import { Contact } from '@/lib/types';
+import { useAuth } from '@/context/AuthContext';
 
 export default function NewTransactionModal({
   onClose, onSaved
 }: { onClose: () => void; onSaved: () => void }) {
+  const { user } = useAuth();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [form, setForm] = useState({
     contact: '',
@@ -56,6 +58,26 @@ export default function NewTransactionModal({
         {error && <div className="text-red-400 text-sm mb-4">{error}</div>}
 
         <form onSubmit={submit} className="space-y-4">
+          {user?.businessId && (
+            <div className={`p-4 rounded-xl border-2 transition-colors cursor-pointer flex items-center justify-between ${
+              form.category === 'business' 
+                ? 'bg-indigo-600/20 border-indigo-500' 
+                : 'bg-gray-900 border-gray-800 hover:border-gray-700'
+            }`}
+            onClick={() => setForm(f => ({ ...f, category: f.category === 'business' ? 'other' : 'business' }))}
+            >
+              <div>
+                <p className={`font-semibold ${form.category === 'business' ? 'text-indigo-400' : 'text-gray-300'}`}>🏢 Business Transaction</p>
+                <p className="text-xs text-gray-500 mt-0.5">Link this expense to your business P&L</p>
+              </div>
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${
+                form.category === 'business' ? 'bg-indigo-500 border-indigo-500' : 'border-gray-600'
+              }`}>
+                {form.category === 'business' && <span className="text-white text-xs">✓</span>}
+              </div>
+            </div>
+          )}
+
           <div className="flex p-1 bg-gray-900 rounded-lg">
             <button
               type="button"
@@ -115,7 +137,7 @@ export default function NewTransactionModal({
               >
                 <option value="other">Other</option>
                 <option value="loan">Loan</option>
-                <option value="business">Business</option>
+                {!user?.businessId && <option value="business">Business</option>}
                 <option value="personal">Personal</option>
                 <option value="rent">Rent</option>
                 <option value="food">Food</option>

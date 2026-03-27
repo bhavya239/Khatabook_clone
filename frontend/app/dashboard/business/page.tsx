@@ -15,7 +15,7 @@ interface Business {
 }
 
 export default function BusinessPage() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [business, setBusiness] = useState<Business | null>(null);
   const [loading, setLoading] = useState(true);
   const [businessName, setBusinessName] = useState('');
@@ -42,6 +42,7 @@ export default function BusinessPage() {
     try {
       setError('');
       await api.post('/business/create', { name: businessName });
+      await refreshUser();
       setMsg('Business created successfully!');
       setBusinessName('');
       load();
