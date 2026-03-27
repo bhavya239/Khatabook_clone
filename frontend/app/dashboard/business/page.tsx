@@ -1,9 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import axios from 'axios';
-
-const api = axios.create({ baseURL: process.env.NEXT_PUBLIC_API_URL });
+import api from '@/lib/api';
 
 interface Member {
   user: { _id: string; name: string; phone: string; avatar: string };
@@ -25,13 +23,10 @@ export default function BusinessPage() {
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
 
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-  const headers = { Authorization: `Bearer ${token}` };
-
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await api.get('/business/me', { headers });
+      const res = await api.get('/business/me');
       setBusiness(res.data.business);
     } catch {
       setBusiness(null);
@@ -46,7 +41,7 @@ export default function BusinessPage() {
     if (!businessName.trim()) return;
     try {
       setError('');
-      await api.post('/business/create', { name: businessName }, { headers });
+      await api.post('/business/create', { name: businessName });
       setMsg('Business created successfully!');
       setBusinessName('');
       load();
@@ -59,7 +54,7 @@ export default function BusinessPage() {
     if (!invitePhone.trim()) return;
     try {
       setError('');
-      await api.post('/business/invite', { phone: invitePhone }, { headers });
+      await api.post('/business/invite', { phone: invitePhone });
       setMsg('Staff member invited!');
       setInvitePhone('');
       load();
@@ -71,7 +66,7 @@ export default function BusinessPage() {
   const removeStaff = async (userId: string) => {
     if (!confirm('Remove this staff member?')) return;
     try {
-      await api.delete(`/business/remove/${userId}`, { headers });
+      await api.delete(`/business/remove/${userId}`);
       load();
     } catch (e: any) {
       setError(e?.response?.data?.message || 'Failed to remove staff');
