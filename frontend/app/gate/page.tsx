@@ -89,11 +89,10 @@ function GateContent() {
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
-            className={`w-4 h-4 rounded-full border-2 transition-all duration-150 ${
-              i < pin.length
-                ? 'bg-amber-500 border-amber-500 scale-110'
-                : 'border-gray-600 bg-transparent'
-            }`}
+            className={`w-4 h-4 rounded-full border-2 transition-all duration-150 ${i < pin.length
+              ? 'bg-amber-500 border-amber-500 scale-110'
+              : 'border-gray-600 bg-transparent'
+              }`}
           />
         ))}
       </div>
@@ -112,8 +111,8 @@ function GateContent() {
       )}
 
       {/* Numpad */}
-      <div className="grid grid-cols-3 gap-4">
-        {['1','2','3','4','5','6','7','8','9','','0','⌫'].map((d, i) => (
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+        {['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫'].map((d, i) => (
           <button
             key={i}
             disabled={locked || d === ''}
@@ -121,13 +120,12 @@ function GateContent() {
               if (d === '⌫') setPin((p) => p.slice(0, -1));
               else if (d) handleDigit(d);
             }}
-            className={`w-20 h-20 rounded-full text-2xl font-medium transition-all active:scale-95 ${
-              d === ''
-                ? 'cursor-default opacity-0'
-                : d === '⌫'
+            className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full text-xl sm:text-2xl font-medium transition-all active:scale-95 ${d === ''
+              ? 'cursor-default opacity-0'
+              : d === '⌫'
                 ? 'bg-gray-800 text-red-400 hover:bg-gray-700 disabled:opacity-30'
                 : 'bg-gray-800 text-white hover:bg-gray-700 disabled:opacity-30'
-            }`}
+              }`}
           >
             {d}
           </button>

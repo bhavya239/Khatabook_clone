@@ -62,7 +62,7 @@ export default function UnlockPage() {
       {error && <p className="text-red-400 text-sm -mt-4">{error}</p>}
 
       {/* Numpad */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         {['1','2','3','4','5','6','7','8','9','','0','⌫'].map((d, i) => (
           <button
             key={i}
@@ -71,7 +71,7 @@ export default function UnlockPage() {
               if (d === '⌫') setPin((p) => p.slice(0, -1));
               else if (d) handleDigit(d);
             }}
-            className={`w-20 h-20 rounded-full text-2xl font-medium transition-transform active:scale-95 ${
+            className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full text-xl sm:text-2xl font-medium transition-transform active:scale-95 ${
               d === ''
                 ? 'cursor-default'
                 : d === '⌫'

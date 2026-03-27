@@ -105,14 +105,14 @@ export default function BusinessPage() {
           <p className="text-gray-400 text-sm mb-4">
             Create a shared workspace to collaborate with your team. You will be the owner with full access.
           </p>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <input
               value={businessName}
               onChange={e => setBusinessName(e.target.value)}
               placeholder="Business name (e.g. Patel Traders)"
               className="flex-1 bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500"
             />
-            <button onClick={createBusiness} className="btn-primary px-5">
+            <button onClick={createBusiness} className="btn-primary px-5 py-3">
               Create
             </button>
           </div>
@@ -121,7 +121,7 @@ export default function BusinessPage() {
         /* ── Business exists: show dashboard ── */
         <div className="space-y-5">
           {/* Header card */}
-          <div className="glass p-6 flex items-center justify-between">
+          <div className="glass p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">Business</p>
               <h2 className="text-2xl font-bold text-white">{business.name}</h2>
@@ -139,14 +139,14 @@ export default function BusinessPage() {
           {user?.businessRole === 'owner' && (
             <div className="glass p-5">
               <h3 className="text-white font-semibold mb-3">Invite Staff Member</h3>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <input
                   value={invitePhone}
                   onChange={e => setInvitePhone(e.target.value)}
                   placeholder="+91XXXXXXXXXX"
                   className="flex-1 bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500 text-sm"
                 />
-                <button onClick={inviteStaff} className="btn-primary px-5 text-sm">
+                <button onClick={inviteStaff} className="btn-primary px-5 text-sm py-3">
                   Invite
                 </button>
               </div>
