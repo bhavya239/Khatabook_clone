@@ -1,9 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
-
-const api = axios.create({ baseURL: process.env.NEXT_PUBLIC_API_URL });
-const getHeaders = () => ({ Authorization: `Bearer ${typeof window !== 'undefined' ? localStorage.getItem('token') : ''}` });
+import api from '@/lib/api';
 
 const ROLE_BADGE: Record<string, string> = {
   superadmin: 'bg-rose-500/20 text-rose-400 border-rose-500/30',
@@ -32,8 +29,8 @@ export default function SuperAdminPage() {
     try {
       setLoading(true);
       const [ov, us] = await Promise.all([
-        api.get('/admin/overview', { headers: getHeaders() }),
-        api.get(`/admin/users?search=${search}`, { headers: getHeaders() }),
+        api.get('/admin/overview'),
+        api.get(`/admin/users?search=${search}`),
       ]);
       setOverview(ov.data.overview);
       setUsers(us.data.users);
@@ -48,7 +45,7 @@ export default function SuperAdminPage() {
 
   const changeRole = async (userId: string, role: string) => {
     try {
-      await api.put(`/admin/users/${userId}/role`, { role }, { headers: getHeaders() });
+      await api.put(`/admin/users/${userId}/role`, { role });
       setMsg(`Role updated to ${role}`);
       load();
     } catch (e: any) { setMsg(e?.response?.data?.message || 'Failed'); }
@@ -56,7 +53,7 @@ export default function SuperAdminPage() {
 
   const toggleActive = async (userId: string) => {
     try {
-      await api.put(`/admin/users/${userId}/toggle`, {}, { headers: getHeaders() });
+      await api.put(`/admin/users/${userId}/toggle`);
       load();
     } catch (e: any) { setMsg(e?.response?.data?.message || 'Failed'); }
   };

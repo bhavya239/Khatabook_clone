@@ -35,6 +35,9 @@ const signup = async (req, res) => {
         name: user.name,
         phone: user.phone,
         avatar: user.avatar,
+        role: user.role,
+        businessId: user.businessId,
+        businessRole: user.businessRole,
         createdAt: user.createdAt,
       },
     });
@@ -79,6 +82,9 @@ const login = async (req, res) => {
         name: user.name,
         phone: user.phone,
         avatar: user.avatar,
+        role: user.role,
+        businessId: user.businessId,
+        businessRole: user.businessRole,
       },
     });
   } catch (error) {
