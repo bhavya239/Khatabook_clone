@@ -32,6 +32,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const user = JSON.parse(userStr) as User;
         setState({ user, token, isAuthenticated: true, isUnlocked: false });
+
+        // Background sync to ensure latest user data (e.g. business role)
+        authAPI.getMe().then(({ data }) => {
+          localStorage.setItem('kb_user', JSON.stringify(data.user));
+          setState(prev => ({ ...prev, user: data.user }));
+        }).catch(() => {});
+
       } catch {}
     }
     setLoading(false);
