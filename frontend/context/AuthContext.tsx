@@ -10,6 +10,7 @@ interface AuthContextType extends AuthState {
   logout: () => void;
   unlock: (pin: string) => Promise<boolean>;
   refreshUser: () => Promise<void>;
+  updateAutoLock: (time: number | null) => Promise<void>;
   loading: boolean;
 }
 
@@ -86,8 +87,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateAutoLock = async (time: number | null) => {
+    try {
+      await authAPI.updateAutoLock(time);
+      if (state.user) {
+        const updatedUser = { ...state.user, autoLockTime: time };
+        localStorage.setItem('kb_user', JSON.stringify(updatedUser));
+        setState((prev) => ({ ...prev, user: updatedUser }));
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  // ── Auto Lock System ──────────────────────────────────────────
+  useEffect(() => {
+    // Only track if logged in, unlocked, and has auto-lock activated
+    if (!state.isAuthenticated || !state.isUnlocked || !state.user?.autoLockTime) return;
+
+    let timeoutId: NodeJS.Timeout;
+
+    const lockApp = () => {
+      setState((prev) => ({ ...prev, isUnlocked: false }));
+    };
+
+    const resetTimer = () => {
+      clearTimeout(timeoutId);
+      // convert seconds to ms
+      timeoutId = setTimeout(lockApp, state.user!.autoLockTime! * 1000);
+    };
+
+    // Init timer
+    resetTimer();
+
+    // Standard interaction events
+    const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
+    
+    // Throttle listener attachment
+    events.forEach((e) => window.addEventListener(e, resetTimer, { passive: true }));
+
+    return () => {
+      clearTimeout(timeoutId);
+      events.forEach((e) => window.removeEventListener(e, resetTimer));
+    };
+  }, [state.isAuthenticated, state.isUnlocked, state.user?.autoLockTime]);
+
   return (
-    <AuthContext.Provider value={{ ...state, login, signup, logout, unlock, refreshUser, loading }}>
+    <AuthContext.Provider value={{ ...state, login, signup, logout, unlock, refreshUser, updateAutoLock, loading }}>
       {children}
     </AuthContext.Provider>
   );

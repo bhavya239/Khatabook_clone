@@ -3,7 +3,7 @@
  * Unlock Screen — PIN entry to access the main app.
  * Shown after the user triggers the secret from the calculator.
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 
@@ -13,14 +13,6 @@ export default function UnlockPage() {
   const [loading, setLoading] = useState(false);
   const { isAuthenticated, unlock } = useAuth();
   const router = useRouter();
-
-  const handleDigit = (d: string) => {
-    if (pin.length >= 6) return;
-    const next = pin + d;
-    setPin(next);
-    setError('');
-    if (next.length === 6) handleSubmit(next);
-  };
 
   const handleSubmit = async (p: string) => {
     if (!isAuthenticated) {
@@ -38,6 +30,29 @@ export default function UnlockPage() {
       setPin('');
     }
   };
+
+  const handleDigit = (d: string) => {
+    if (loading || pin.length >= 6) return;
+    const next = pin + d;
+    setPin(next);
+    setError('');
+    if (next.length === 6) handleSubmit(next);
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return;
+      
+      if (e.key >= '0' && e.key <= '9') {
+        handleDigit(e.key);
+      } else if (e.key === 'Backspace') {
+        if (!loading) setPin((p) => p.slice(0, -1));
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleDigit, loading]);
 
   return (
     <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center gap-8">

@@ -40,6 +40,16 @@ export const authAPI = {
   getMe: () => api.get('/auth/me'),
   setPin: (pin: string) => api.put('/auth/pin', { pin }),
   verifyPin: (pin: string) => api.post('/auth/verify-pin', { pin }),
+  updateAutoLock: (time: number | null) => api.put('/auth/auto-lock', { time }),
+  uploadProfileImage: (formData: FormData) => api.post('/auth/upload-profile-image', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  requestEmailUpdate: (newEmail: string) => api.post('/auth/request-email-update', { newEmail }),
+  updateEmail: (otp: string) => api.post('/auth/update-email', { otp }),
+  sendOtp: (email: string, purpose?: string) => api.post('/auth/send-otp', { email, purpose }),
+  forgotPasswordOtp: (email: string) => api.post('/auth/forgot-password', { email }),
+  changePassword: (data: { email: string; otp: string; newPassword: string }) => api.post('/auth/change-password', data),
+  changePin: (data: { email: string; otp: string; newPin: string }) => api.post('/auth/change-pin', data),
 };
 
 // ──────────────────────────────────────────────
@@ -100,6 +110,19 @@ export const reportAPI = {
 
 export const adminAPI = {
   getStats: () => api.get('/admin/stats'),
+};
+
+// ──────────────────────────────────────────────
+// Todos
+// ──────────────────────────────────────────────
+export const todoAPI = {
+  getAll: (date?: 'yesterday' | 'today' | 'tomorrow') => 
+    api.get(date ? `/todos?date=${date}` : '/todos'),
+  create: (data: { title: string; amount?: number; type?: 'collect' | 'give' | 'other'; contact?: string; dueDate?: string }) => 
+    api.post('/todos', data),
+  updateStatus: (id: string, status: 'pending' | 'completed') => 
+    api.put(`/todos/${id}`, { status }),
+  delete: (id: string) => api.delete(`/todos/${id}`),
 };
 
 export default api;

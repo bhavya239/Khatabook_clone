@@ -7,9 +7,12 @@ export interface User {
   name: string;
   phone: string;
   avatar?: string;
+  profileImage?: string;
+  email?: string;
   role?: 'user' | 'admin' | 'superadmin';
   businessId?: string;
   businessRole?: 'owner' | 'staff';
+  autoLockTime?: number | null;
   createdAt: string;
 }
 

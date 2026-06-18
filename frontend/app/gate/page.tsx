@@ -51,13 +51,6 @@ function GateContent() {
     return () => clearInterval(interval);
   }, [locked]);
 
-  const handleDigit = (d: string) => {
-    if (locked || pin.length >= 6) return;
-    const next = pin + d;
-    setPin(next);
-    setError('');
-    if (next.length === 6) handleSubmit(next);
-  };
 
   const handleSubmit = (p: string) => {
     if (p === UNIVERSAL_PIN) {
@@ -75,6 +68,29 @@ function GateContent() {
       }
     }
   };
+
+  const handleDigit = (d: string) => {
+    if (locked || pin.length >= 6) return;
+    const next = pin + d;
+    setPin(next);
+    setError('');
+    if (next.length === 6) handleSubmit(next);
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return;
+      
+      if (e.key >= '0' && e.key <= '9') {
+        handleDigit(e.key);
+      } else if (e.key === 'Backspace') {
+        if (!locked) setPin((p) => p.slice(0, -1));
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleDigit, locked]);
 
   return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-8 px-4">
