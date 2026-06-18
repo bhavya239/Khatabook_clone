@@ -68,6 +68,32 @@ app.get('/api/health', (req, res) => {
 });
 
 // ──────────────────────────────────────────────
+// Debug endpoint: test MongoDB connection
+// ──────────────────────────────────────────────
+app.get('/api/debug/db', async (req, res) => {
+  try {
+    const mongoose = require('mongoose');
+    const uri = process.env.MONGO_URI || 'NOT SET';
+    const maskedUri = uri.replace(/:([^@]+)@/, ':****@');
+    
+    if (!process.env.MONGO_URI) {
+      return res.status(500).json({ success: false, message: 'MONGO_URI not set', uri: 'NOT SET' });
+    }
+
+    await connectDB();
+    res.json({
+      success: true,
+      message: 'MongoDB connected!',
+      readyState: mongoose.connection.readyState,
+      host: mongoose.connection.host,
+      uri: maskedUri,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message, uri: (process.env.MONGO_URI || 'NOT SET').replace(/:([^@]+)@/, ':****@') });
+  }
+});
+
+// ──────────────────────────────────────────────
 // API Routes
 // ──────────────────────────────────────────────
 app.use('/api/auth', require('./routes/auth.routes'));
