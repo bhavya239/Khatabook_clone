@@ -91,15 +91,24 @@ app.use((err, req, res, next) => {
 // ──────────────────────────────────────────────
 const connectDB = require('./config/db');
 
-const PORT = process.env.PORT || 5000;
+// Middleware: ensure DB is connected before every request
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error('❌ DB connection failed:', err.message);
+    res.status(500).json({ success: false, message: 'Database connection failed' });
+  }
+});
 
-const startServer = async () => {
-  await connectDB();
+// Local dev: start HTTP server
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
     console.log(`✅ Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
   });
-};
+}
 
-startServer();
+module.exports = app; // Vercel serverless entry point
 
-module.exports = app; // exported for testing
