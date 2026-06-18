@@ -6,10 +6,7 @@ const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
-const authRoutes = require('./routes/auth.routes');
-const contactRoutes = require('./routes/contact.routes');
-const transactionRoutes = require('./routes/transaction.routes');
-const adminRoutes = require('./routes/admin.routes');
+const connectDB = require('./config/db');
 
 const app = express();
 
@@ -33,7 +30,7 @@ app.use(cors({
   credentials: true,
 }));
 
-// Rate limiting — 100 requests per 15 minutes per IP
+// Rate limiting — 1000 requests per 15 minutes per IP
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 1000,
@@ -42,7 +39,7 @@ const limiter = rateLimit({
 app.use('/api', limiter);
 
 // Body parsers
-app.use(express.json({ limit: '10kb' })); // Limit body size for security
+app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // HTTP request logger (disabled in test)
@@ -51,20 +48,35 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 // ──────────────────────────────────────────────
-// API Routes
+// DB Connection Middleware (MUST be before routes)
 // ──────────────────────────────────────────────
-app.use('/api/auth', authRoutes);
-app.use('/api/contacts', contactRoutes);
-app.use('/api/transactions', transactionRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/reports', require('./routes/report.routes'));
-app.use('/api/business', require('./routes/business.routes'));
-app.use('/api/todos', require('./routes/todo.routes'));
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error('❌ DB connection failed:', err.message);
+    res.status(500).json({ success: false, message: 'Database connection failed' });
+  }
+});
 
-// Health check endpoint
+// ──────────────────────────────────────────────
+// Health check endpoint (no DB needed)
+// ──────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Khatabook API is running 🚀', env: process.env.NODE_ENV });
 });
+
+// ──────────────────────────────────────────────
+// API Routes
+// ──────────────────────────────────────────────
+app.use('/api/auth', require('./routes/auth.routes'));
+app.use('/api/contacts', require('./routes/contact.routes'));
+app.use('/api/transactions', require('./routes/transaction.routes'));
+app.use('/api/admin', require('./routes/admin.routes'));
+app.use('/api/reports', require('./routes/report.routes'));
+app.use('/api/business', require('./routes/business.routes'));
+app.use('/api/todos', require('./routes/todo.routes'));
 
 // ──────────────────────────────────────────────
 // 404 Handler
@@ -87,22 +99,8 @@ app.use((err, req, res, next) => {
 });
 
 // ──────────────────────────────────────────────
-// Database + Server Boot
-// ──────────────────────────────────────────────
-const connectDB = require('./config/db');
-
-// Middleware: ensure DB is connected before every request
-app.use(async (req, res, next) => {
-  try {
-    await connectDB();
-    next();
-  } catch (err) {
-    console.error('❌ DB connection failed:', err.message);
-    res.status(500).json({ success: false, message: 'Database connection failed' });
-  }
-});
-
 // Local dev: start HTTP server
+// ──────────────────────────────────────────────
 if (process.env.NODE_ENV !== 'production') {
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
@@ -111,4 +109,3 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 module.exports = app; // Vercel serverless entry point
-
