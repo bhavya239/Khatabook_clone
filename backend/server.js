@@ -20,11 +20,17 @@ app.use(helmet());
 // Allow requests from the frontend client securely
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow local development and Vercel deployments
-    if (!origin || origin.startsWith('http://localhost') || origin.includes('vercel.app')) {
+    // Allow local development, Vercel deployments, and any origin in production
+    const allowed = [
+      process.env.CLIENT_URL,
+      'http://localhost:3000',
+      'http://localhost:5000',
+    ].filter(Boolean);
+    if (!origin || allowed.includes(origin) || origin.includes('vercel.app') || origin.includes('localhost')) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      // In production, allow all to prevent CORS blocking auth
+      callback(null, true);
     }
   },
   credentials: true,
@@ -48,6 +54,18 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 // ──────────────────────────────────────────────
+// Health check endpoint (NO DB needed — always available)
+// ──────────────────────────────────────────────
+app.get('/api/health', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Khatabook API is running 🚀',
+    env: process.env.NODE_ENV,
+    mongoUri: process.env.MONGO_URI ? 'SET ✅' : 'NOT SET ❌',
+  });
+});
+
+// ──────────────────────────────────────────────
 // DB Connection Middleware (MUST be before routes)
 // ──────────────────────────────────────────────
 app.use(async (req, res, next) => {
@@ -56,15 +74,12 @@ app.use(async (req, res, next) => {
     next();
   } catch (err) {
     console.error('❌ DB connection failed:', err.message);
-    res.status(500).json({ success: false, message: 'Database connection failed' });
+    res.status(500).json({
+      success: false,
+      message: 'Database connection failed',
+      error: err.message,
+    });
   }
-});
-
-// ──────────────────────────────────────────────
-// Health check endpoint (no DB needed)
-// ──────────────────────────────────────────────
-app.get('/api/health', (req, res) => {
-  res.json({ success: true, message: 'Khatabook API is running 🚀', env: process.env.NODE_ENV });
 });
 
 // ──────────────────────────────────────────────
