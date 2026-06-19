@@ -1,15 +1,10 @@
 const mongoose = require('mongoose');
 
-// Cache the connection across serverless invocations (Vercel)
 let cached = global.mongoose;
 if (!cached) {
   cached = global.mongoose = { conn: null, promise: null };
 }
 
-/**
- * Connects to MongoDB using the URI from environment variables.
- * Caches the connection for serverless environments (Vercel).
- */
 const connectDB = async () => {
   if (cached.conn) {
     return cached.conn;
@@ -22,14 +17,14 @@ const connectDB = async () => {
     }
 
     cached.promise = mongoose
-      .connect(uri)
+      .connect(uri, { serverSelectionTimeoutMS: 10000 })
       .then((mongooseInstance) => {
-        console.log(`✅ MongoDB Connected: ${mongooseInstance.connection.host}`);
+        console.log(`MongoDB connected: ${mongooseInstance.connection.host}`);
         return mongooseInstance;
       })
       .catch((error) => {
         cached.promise = null;
-        console.error(`❌ MongoDB connection error: ${error.message}`);
+        console.error(`MongoDB connection error: ${error.message}`);
         throw error;
       });
   }
